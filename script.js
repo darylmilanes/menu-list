@@ -88,6 +88,27 @@ function initAddButtons() {
       const text = input.value.trim();
       if (!text) return;
       const dateStr = formatDate(currentDate);
+      // if offline, enqueue the operation to be processed later
+      if (!navigator.onLine && window.DB && typeof window.DB.queueAdd === 'function') {
+        window.DB.queueAdd({ action: 'add', date: dateStr, meal, value: text }).then(()=>{
+          // reflect in localStorage immediately for UX
+          const data = getData(dateStr);
+          data[meal].push(text);
+          saveData(dateStr, data);
+          input.value = "";
+          loadDailyView();
+          loadWeeklyView();
+        }).catch(()=>{
+          // fallback to normal save if queue fails
+          const data = getData(dateStr);
+          data[meal].push(text);
+          saveData(dateStr, data);
+          input.value = "";
+          loadDailyView();
+          loadWeeklyView();
+        });
+        return;
+      }
       const data = getData(dateStr);
       data[meal].push(text);
       saveData(dateStr, data);
@@ -216,12 +237,14 @@ window.onload = () => {
     const DB_VERSION = 1;
     const STORE = 'kv';
 
-    function openDB() {
+  function openDB() {
       return new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, DB_VERSION);
         req.onupgradeneeded = (e) => {
           const db = e.target.result;
-          if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
+      // queue store for offline write operations
+      if (!db.objectStoreNames.contains('queue')) db.createObjectStore('queue', { keyPath: 'qid', autoIncrement: true });
         };
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
@@ -261,10 +284,81 @@ window.onload = () => {
           r.onerror = () => rej(r.error);
         });
       }
+      ,
+      // queue methods for offline operations
+      async queueAdd(obj) {
+        const db = await this.ready();
+        return new Promise((res, rej) => {
+          const tx = db.transaction('queue', 'readwrite');
+          const store = tx.objectStore('queue');
+          const r = store.add(obj);
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+        });
+      },
+      async queueGetAll() {
+        const db = await this.ready();
+        return new Promise((res, rej) => {
+          const tx = db.transaction('queue', 'readonly');
+          const store = tx.objectStore('queue');
+          const r = store.getAll();
+          r.onsuccess = () => res(r.result || []);
+          r.onerror = () => rej(r.error);
+        });
+      },
+      async queueDelete(qid) {
+        const db = await this.ready();
+        return new Promise((res, rej) => {
+          const tx = db.transaction('queue', 'readwrite');
+          const store = tx.objectStore('queue');
+          const r = store.delete(qid);
+          r.onsuccess = () => res();
+          r.onerror = () => rej(r.error);
+        });
+      },
+      async queueClear() {
+        const db = await this.ready();
+        return new Promise((res, rej) => {
+          const tx = db.transaction('queue', 'readwrite');
+          const store = tx.objectStore('queue');
+          const r = store.clear();
+          r.onsuccess = () => res();
+          r.onerror = () => rej(r.error);
+        });
+      }
     };
 
     window.DB = DBAPI;
+    // when DB is ready, process any queued operations
+    DBAPI.ready().then(()=>{
+      processQueue().catch(()=>{});
+    }).catch(()=>{});
   })();
+
+  async function processQueue() {
+    if (!window.DB || typeof window.DB.queueGetAll !== 'function') return;
+    try {
+      const items = await window.DB.queueGetAll();
+      for (const item of items) {
+        if (item.action === 'add') {
+          const dateStr = item.date;
+          const data = getData(dateStr);
+          data[item.meal].push(item.value);
+          saveData(dateStr, data);
+        }
+        // remove queue item
+        await window.DB.queueDelete(item.qid);
+      }
+      // refresh UI
+      loadDailyView();
+      loadWeeklyView();
+    } catch (e) {
+      console.error('processQueue error', e);
+    }
+  }
+
+  // process queue on reconnect
+  window.addEventListener('online', () => { processQueue().catch(()=>{}); });
 
   $("#prevDay").onclick = () => {
     currentDate.setDate(currentDate.getDate() - 1);
