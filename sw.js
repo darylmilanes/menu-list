@@ -1,16 +1,19 @@
-const CACHE_NAME = 'menu-list-v1';
+const CACHE_NAME = 'menu-list-v2';
 const PRECACHE_URLS = [
-  '.',
+  '/',
   '/index.html',
   '/style.css',
   '/script.js',
-  '/manifest.json'
+  '/manifest.json',
+  '/offline.html',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS))
+  caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS))
   );
 });
 
@@ -29,7 +32,20 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Serve same-origin requests with cache-first, fallback to network
+  // Handle navigation requests: network-first, fallback to cache, then offline page
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).then(resp => {
+        // update cache with latest navigation response
+        const copy = resp.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return resp;
+      }).catch(() => caches.match(event.request).then(r => r || caches.match('/offline.html')))
+    );
+    return;
+  }
+
+  // For same-origin requests, try cache first then network
   if (url.origin === location.origin) {
     event.respondWith(
       caches.match(event.request).then(response => {
@@ -37,10 +53,10 @@ self.addEventListener('fetch', event => {
         return fetch(event.request).then(networkRes => {
           // put a copy in runtime cache
           return caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, networkRes.clone());
+            try { cache.put(event.request, networkRes.clone()); } catch (e) {}
             return networkRes;
           });
-        }).catch(() => caches.match('/index.html'));
+        }).catch(() => caches.match('/offline.html'));
       })
     );
   }
