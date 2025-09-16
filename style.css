@@ -1,0 +1,169 @@
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: #fafeff;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+header.appbar {
+  background: #006666;
+  color: #fff;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-nav button {
+  background: #149bb2;
+  border: none;
+  color: #fff;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+main {
+  padding: 15px;
+  display: grid;
+  gap: 20px;
+}
+
+/* Daily view: ensure cards have breathing room on mobile and desktop */
+#dailyView {
+  display: flex;           /* stack cards on mobile */
+  flex-direction: column;
+  gap: 20px;               /* vertical space between cards on mobile; increase if needed */
+}
+
+/* Mobile-first: meals stack vertically */
+.meal {
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.meal[data-meal="breakfast"] { background: #fff9c4; }
+.meal[data-meal="lunch"]     { background: #c8e6c9; }
+.meal[data-meal="snacks"]    { background: #bbdefb; }
+.meal[data-meal="dinner"]    { background: #ffe0b2; }
+
+.meal h2 {
+  margin: 0 0 10px;
+}
+
+.meal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+}
+
+.meal-list li {
+  background: rgba(255,255,255,0.7);
+  margin-bottom: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.meal-input {
+  display: flex;
+  gap: 6px;
+}
+
+.meal-input input {
+  flex: 1;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.add-btn {
+  background: #006666;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+footer {
+  text-align: center;
+  padding: 10px;
+}
+
+footer button {
+  background: #149bb2;
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Weekly view */
+#weeklyView {
+  padding: 10px;
+}
+
+#weekGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.week-card {
+  background: #f1f1f1;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.week-card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.week-card ul {
+  padding: 0;
+  margin: 5px 0;
+  list-style: none;
+}
+
+.week-card li {
+  font-size: 0.9rem;
+  margin-bottom: 3px;
+}
+
+/* -------- Responsive -------- */
+
+/* Tablet/Desktop: meals in 2x2 grid */
+@media (min-width: 768px) {
+  #dailyView {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px; /* larger gap on desktop so rows/columns don't touch */
+  }
+}
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}

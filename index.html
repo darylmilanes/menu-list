@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Menu List</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="appbar">
+    <h1>Menu List</h1>
+    <div class="date-nav">
+      <button id="prevDay">◀</button>
+      <span id="currentDate"></span>
+      <button id="nextDay">▶</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="dailyView" class="view active">
+      <div class="meal" data-meal="breakfast">
+        <h2>Breakfast</h2>
+        <ul class="meal-list"></ul>
+        <div class="meal-input">
+          <input type="text" placeholder="Add item..." />
+          <button class="add-btn">+</button>
+        </div>
+      </div>
+      <div class="meal" data-meal="lunch">
+        <h2>Lunch</h2>
+        <ul class="meal-list"></ul>
+        <div class="meal-input">
+          <input type="text" placeholder="Add item..." />
+          <button class="add-btn">+</button>
+        </div>
+      </div>
+      <div class="meal" data-meal="snacks">
+        <h2>Snacks</h2>
+        <ul class="meal-list"></ul>
+        <div class="meal-input">
+          <input type="text" placeholder="Add item..." />
+          <button class="add-btn">+</button>
+        </div>
+      </div>
+      <div class="meal" data-meal="dinner">
+        <h2>Dinner</h2>
+        <ul class="meal-list"></ul>
+        <div class="meal-input">
+          <input type="text" placeholder="Add item..." />
+          <button class="add-btn">+</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="weeklyView" class="view">
+      <h2>This Week</h2>
+      <div id="weekGrid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <button id="toggleView">Show Weekly View</button>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
