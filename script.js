@@ -158,6 +158,14 @@ function loadWeeklyView() {
     h3.textContent = displayDate(d);
     card.appendChild(h3);
 
+    // mark today's card and past dates
+    const todayStr = formatDate(new Date());
+    if (dateStr === todayStr) {
+      card.classList.add('today');
+    } else if (new Date(dateStr) < new Date(todayStr)) {
+      card.classList.add('past');
+    }
+
     meals.forEach(meal => {
       const title = document.createElement("strong");
       title.textContent = meal.charAt(0).toUpperCase()+meal.slice(1)+":";
