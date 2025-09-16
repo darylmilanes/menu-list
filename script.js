@@ -14,13 +14,31 @@ function displayDate(d) {
 }
 
 function getData(dateStr) {
-  // Try IndexedDB first (if available) - wrapper functions return Promises.
+  // Return localStorage value immediately so callers remain synchronous.
+  const key = 'menu-' + dateStr;
+  const fromLocal = JSON.parse(localStorage.getItem(key)) || { breakfast: [], lunch: [], snacks: [], dinner: [] };
+
+  // If IndexedDB is available, asynchronously sync DB -> localStorage and refresh views if data changed.
   try {
-    if (window.DB) return window.DB.get('menu-' + dateStr).then(v => v || { breakfast: [], lunch: [], snacks: [], dinner: [] });
+    if (window.DB && typeof window.DB.get === 'function') {
+      window.DB.get(key).then(v => {
+        if (v && JSON.stringify(v) !== JSON.stringify(fromLocal)) {
+          try {
+            localStorage.setItem(key, JSON.stringify(v));
+          } catch (e) {}
+          // If the currently displayed date matches, refresh the UI to show DB values.
+          if (formatDate(currentDate) === dateStr) {
+            loadDailyView();
+            loadWeeklyView();
+          }
+        }
+      }).catch(()=>{});
+    }
   } catch (e) {
-    // fall through
+    // ignore
   }
-  return JSON.parse(localStorage.getItem("menu-" + dateStr)) || { breakfast: [], lunch: [], snacks: [], dinner: [] };
+
+  return fromLocal;
 }
 
 function saveData(dateStr, data) {
@@ -76,13 +94,24 @@ function initAddButtons() {
       input.value = "";
       loadDailyView();
       loadWeeklyView();
+      try {
+        // ensure focus and put caret at end; use setTimeout to wait for DOM updates
+        setTimeout(() => {
+          input.focus();
+          try { input.setSelectionRange(input.value.length, input.value.length); } catch(e) {}
+        }, 0);
+      } catch (e) {}
     };
 
-    addBtn.onclick = doAdd;
+    // ensure button doesn't act as a form submit
+    try { addBtn.type = 'button'; } catch (e) {}
+  addBtn.onclick = () => { try { doAdd(); } catch (err) { console.error('add error', err); } };
 
-    // Allow Enter/Return to add the input
+    // Allow Enter/Return to add the input. Use keydown for responsiveness,
+    // fall back to keyCode for older browsers, and ignore IME composition.
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      const isEnter = (e.key === 'Enter') || (e.keyCode === 13);
+      if (isEnter && !e.isComposing) {
         e.preventDefault();
         doAdd();
       }
