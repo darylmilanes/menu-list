@@ -168,6 +168,17 @@ footer button {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
+.week-card.today {
+  background: linear-gradient(180deg,#00666622,#ffffff);
+  box-shadow: 0 6px 18px rgba(0,102,102,0.14);
+  border: 2px solid rgba(0,102,102,0.18);
+}
+
+.week-card.past {
+  opacity: 0.45;
+  filter: grayscale(30%);
+}
+
 .week-card h3 {
   margin-top: 0;
   font-size: 1rem;
